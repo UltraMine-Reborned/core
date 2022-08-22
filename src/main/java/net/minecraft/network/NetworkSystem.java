@@ -133,12 +133,10 @@ public class NetworkSystem
 		}
 	}
 
-	public void networkTick()
-	{
+	public void networkTick() {
 		List list = this.networkManagers;
 
-		synchronized (this.networkManagers)
-		{
+		synchronized (this.networkManagers) {
 			Iterator iterator = this.networkManagers.iterator();
 
 			while (iterator.hasNext())
@@ -166,32 +164,14 @@ public class NetworkSystem
 					}
 					catch (Exception exception)
 					{
-						if (networkmanager.isLocalChannel())
-						{
-							CrashReport crashreport = CrashReport.makeCrashReport(exception, "Ticking memory connection");
-							CrashReportCategory crashreportcategory = crashreport.makeCategory("Ticking connection");
-							crashreportcategory.addCrashSectionCallable("Connection", new Callable()
-							{
-								private static final String __OBFID = "CL_00001450";
-								public String call()
-								{
-									return networkmanager.toString();
-								}
-							});
-							throw new ReportedException(crashreport);
+						if (networkmanager.isLocalChannel()) {
+							logger.error("WARNING! CRITICAL ERROR SERVER IS IGNORING! ERROR CODE 0x0001", exception);
+							return;
 						}
 
 						logger.warn("Failed to handle packet for " + networkmanager.getSocketAddress(), exception);
 						final ChatComponentText chatcomponenttext = new ChatComponentText("Internal server error");
-						networkmanager.scheduleOutboundPacket(new S40PacketDisconnect(chatcomponenttext), new GenericFutureListener[] {new GenericFutureListener()
-						{
-							private static final String __OBFID = "CL_00001451";
-							public void operationComplete(Future p_operationComplete_1_)
-							{
-								networkmanager.closeChannel(chatcomponenttext);
-							}
-						}
-																									  });
+						networkmanager.scheduleOutboundPacket(new S40PacketDisconnect(chatcomponenttext), p_operationComplete_1_ -> networkmanager.closeChannel(chatcomponenttext));
 						networkmanager.disableAutoRead();
 					}
 				}
