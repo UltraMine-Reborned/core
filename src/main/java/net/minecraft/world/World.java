@@ -13,6 +13,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 
 import org.ultramine.server.ConfigurationHandler;
 import org.ultramine.server.ServerLoadBalancer;
@@ -92,6 +93,9 @@ import net.openhft.koloboke.collect.map.IntByteMap;
 import net.openhft.koloboke.collect.map.hash.HashIntByteMaps;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraft.entity.EnumCreatureType;
+import org.ultraminereborned.async.Async;
+import org.ultraminereborned.util.HashedArrayList;
+import org.ultraminereborned.util.UltraminedRandom;
 
 public abstract class World implements IBlockAccess
 {
@@ -105,16 +109,17 @@ public abstract class World implements IBlockAccess
 	public final MapStorage perWorldStorage;
 
 	public boolean scheduledUpdatesAreImmediate;
-	public List loadedEntityList = new ArrayList();
-	protected List unloadedEntityList = new ArrayList();
-	public List loadedTileEntityList = new ArrayList();
-	private List addedTileEntityList = new ArrayList();
+	public List<Entity> loadedEntityList = new HashedArrayList<>();
+	protected List<Entity> unloadedEntityList = new HashedArrayList<>();
+	public List<TileEntity> loadedTileEntityList = new HashedArrayList<>();
+	private final List<TileEntity> addedTileEntityList = new HashedArrayList<>();
 	private Set field_147483_b = new HashSet();
 	public List playerEntities = new ArrayList();
 	public List weatherEffects = new ArrayList();
 	private long cloudColour = 16777215L;
 	public int skylightSubtracted;
-	protected int updateLCG = (new Random()).nextInt();
+	public Random rand = new UltraminedRandom();
+	protected int updateLCG = rand.nextInt();
 	protected final int DIST_HASH_MAGIC = 1013904223;
 	public float prevRainingStrength;
 	public float rainingStrength;
@@ -122,7 +127,6 @@ public abstract class World implements IBlockAccess
 	public float thunderingStrength;
 	public int lastLightningBolt;
 	public EnumDifficulty difficultySetting;
-	public Random rand = new Random();
 	public final WorldProvider provider;
 	protected List worldAccesses = new ArrayList();
 	protected IChunkProvider chunkProvider;
@@ -2543,13 +2547,16 @@ public abstract class World implements IBlockAccess
 
 	public Explosion newExplosion(Entity p_72885_1_, double p_72885_2_, double p_72885_4_, double p_72885_6_, float p_72885_8_, boolean p_72885_9_, boolean p_72885_10_)
 	{
-		Explosion explosion = new Explosion(this, p_72885_1_, p_72885_2_, p_72885_4_, p_72885_6_, p_72885_8_);
-		explosion.isFlaming = p_72885_9_;
-		explosion.isSmoking = p_72885_10_;
-		if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(this, explosion)) return explosion;
-		explosion.doExplosionA();
-		explosion.doExplosionB(true);
-		return explosion;
+		CompletableFuture<Explosion> explosionCompletableFuture = Async.async(() -> {
+			Explosion explosion = new Explosion(this, p_72885_1_, p_72885_2_, p_72885_4_, p_72885_6_, p_72885_8_);
+			explosion.isFlaming = p_72885_9_;
+			explosion.isSmoking = p_72885_10_;
+			if(net.minecraftforge.event.ForgeEventFactory.onExplosionStart(this, explosion)) return explosion;
+			explosion.doExplosionA();
+			explosion.doExplosionB(true);
+			return explosion;
+		});
+		return Async.await(explosionCompletableFuture);
 	}
 
 	public float getBlockDensity(Vec3 p_72842_1_, AxisAlignedBB p_72842_2_)

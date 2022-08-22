@@ -17,6 +17,10 @@ public class UltramineServerConfig
 	public static class UltraMineRebornededConf
 	{
 		public boolean forgeVersionChecking = false;
+		public boolean allowSavingOversizedChunks = true;
+		public int redstoneRepeaterUpdateSpeed = -1;
+		public int redstoneTorchUpdateSpeed = -1;
+		public boolean allowTntPushing = true;
 	}
 
 	public static class ListenConf

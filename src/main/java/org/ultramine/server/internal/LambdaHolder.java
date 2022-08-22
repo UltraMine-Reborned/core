@@ -13,8 +13,8 @@ import java.util.function.Supplier;
 /** Java 8 features like lambdas must not be used in net.minecraft classes, so all lambdas used there, located here*/
 public class LambdaHolder
 {
-	public static final Predicate<?> ENTITY_REMOVAL_PREDICATE = o -> ((Entity)o).removeThisTick;
-	public static final Predicate<?> TILE_ENTITY_REMOVAL_PREDICATE = o -> ((TileEntity)o).removeThisTick;
+	public static final Predicate<? super Entity> ENTITY_REMOVAL_PREDICATE = o -> o.removeThisTick;
+	public static final Predicate<? super TileEntity> TILE_ENTITY_REMOVAL_PREDICATE = o -> o.removeThisTick;
 	public static final Supplier<Boolean> BOOLEAN_FALSE_SUPPLIER = () -> Boolean.FALSE;
 
 	public static <T> Supplier<TreeSet<T>> newTreeSet()

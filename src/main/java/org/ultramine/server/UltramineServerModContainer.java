@@ -10,6 +10,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.StringTranslate;
 import net.minecraftforge.common.MinecraftForge;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ultramine.commands.CommandRegistry;
 import org.ultramine.commands.basic.FastWarpCommand;
 import org.ultramine.commands.basic.GenWorldCommand;
@@ -63,6 +65,7 @@ import org.ultramine.core.permissions.Permissions;
 
 public class UltramineServerModContainer extends DummyModContainer
 {
+	public static final Logger log = LogManager.getLogger("[UltraMine]");
 	private static UltramineServerModContainer instance;
 	@InjectService private static ServiceManager services;
 	@InjectService private static Permissions perms;

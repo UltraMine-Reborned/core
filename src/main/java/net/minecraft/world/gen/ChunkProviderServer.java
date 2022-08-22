@@ -49,45 +49,21 @@ import org.ultramine.server.chunk.IChunkLoadCallback;
 import org.ultramine.server.internal.UMHooks;
 import org.ultramine.server.util.VanillaChunkHashMap;
 import org.ultramine.server.util.VanillaChunkHashSet;
+import org.ultraminereborned.concurrent.ListWrapper;
 
 public class ChunkProviderServer implements IChunkProvider
 {
 	private static final Logger logger = LogManager.getLogger();
 	public IntSet unloadQueue = HashIntSets.newMutableSet();
 	public Set<Long> chunksToUnload = new VanillaChunkHashSet(unloadQueue); //mods compatibility
-	private Chunk defaultEmptyChunk;
+	private final Chunk defaultEmptyChunk;
 	public IChunkProvider currentChunkProvider;
 	public IChunkLoader currentChunkLoader;
 	public boolean loadChunkOnProvideRequest = true;
 	public ChunkMap chunkMap = new ChunkMap();
 	public LongHashMap loadedChunkHashMap = new VanillaChunkHashMap(chunkMap); //mods compatibility
 	public WorldServer worldObj;
-	public List loadedChunks = new AbstractList() //mods compatibility
-	{
-		@Override
-		public Object get(int ind)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public int size()
-		{
-			return chunkMap.size();
-		}
-		
-		@Override
-		public Iterator iterator()
-		{
-			return chunkMap.valueCollection().iterator();
-		}
-		
-		@Override
-		public Object[] toArray()
-		{
-			return chunkMap.valueCollection().toArray();
-		}
-	};
+	public List loadedChunks = new ListWrapper<>(chunkMap.valueCollection());
 	private static final String __OBFID = "CL_00001436";
 
 	public ChunkProviderServer(WorldServer par1WorldServer, IChunkLoader par2IChunkLoader, IChunkProvider par3IChunkProvider)
@@ -103,7 +79,7 @@ public class ChunkProviderServer implements IChunkProvider
 
 	public List func_152380_a()
 	{
-		return new ArrayList<Chunk>(chunkMap.valueCollection());
+		return new ArrayList<>(chunkMap.valueCollection());
 	}
 	
 	public boolean chunkExists(int par1, int par2)
@@ -185,7 +161,7 @@ public class ChunkProviderServer implements IChunkProvider
 	{
 		int k = ChunkHash.chunkToKey(par1, par2);
 		this.unloadQueue.removeInt(k);
-		Chunk chunk = (Chunk)this.chunkMap.get(par1, par2);
+		Chunk chunk = this.chunkMap.get(par1, par2);
 
 		if (chunk == null)
 		{

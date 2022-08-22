@@ -112,7 +112,9 @@ public class Explosion
 		int i2 = MathHelper.floor_double(this.explosionY + (double)this.explosionSize + 1.0D);
 		int l = MathHelper.floor_double(this.explosionZ - (double)this.explosionSize - 1.0D);
 		int j2 = MathHelper.floor_double(this.explosionZ + (double)this.explosionSize + 1.0D);
-		List list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this.exploder, AxisAlignedBB.getBoundingBox((double)i, (double)k, (double)l, (double)j, (double)i2, (double)j2));
+        // PaperSpigot start - Fix lag from explosions processing dead entities
+		List list = this.worldObj.getEntitiesWithinAABBExcludingEntity(this.exploder, AxisAlignedBB.getBoundingBox(i, k, l, j, i2, j2), entity -> !entity.isDead);
+		// PaperSpigot end
 		net.minecraftforge.event.ForgeEventFactory.onExplosionDetonate(this.worldObj, this, list, this.explosionSize);
 		Vec3 vec3 = Vec3.createVectorHelper(this.explosionX, this.explosionY, this.explosionZ);
 
