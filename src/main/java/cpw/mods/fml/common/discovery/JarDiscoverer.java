@@ -12,6 +12,7 @@
 
 package cpw.mods.fml.common.discovery;
 
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.jar.JarFile;
@@ -69,7 +70,9 @@ public class JarDiscoverer implements ITypeDiscoverer
 					ASMModParser modParser;
 					try
 					{
-						modParser = new ASMModParser(jar.getInputStream(ze));
+						try (InputStream inputStream = jar.getInputStream(ze)) {
+							modParser = new ASMModParser(inputStream);
+						}
 						candidate.addClassEntry(ze.getName());
 					}
 					catch (LoaderException e)
