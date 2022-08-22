@@ -416,7 +416,7 @@ public abstract class ServerConfigurationManager
 
 	public EntityPlayerMP createPlayerForUser(GameProfile p_148545_1_)
 	{
-		UUID uuid = EntityPlayer.func_146094_a(p_148545_1_);
+		UUID uuid = p_148545_1_.getId();
 		ArrayList arraylist = Lists.newArrayList();
 		EntityPlayerMP entityplayermp;
 
@@ -424,7 +424,7 @@ public abstract class ServerConfigurationManager
 		{
 			entityplayermp = (EntityPlayerMP)this.playerEntityList.get(i);
 
-			if (entityplayermp.getUniqueID().equals(uuid))
+			if (entityplayermp.getGameProfile().getId().equals(uuid))
 			{
 				arraylist.add(entityplayermp);
 			}
