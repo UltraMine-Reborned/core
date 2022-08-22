@@ -21,7 +21,7 @@ ext.previousCommit = null
 ext.versionFile = null
 ext.revision = 0
 group = project_group
-version = (concat_mc_version_to=='version' ? (minecraft_version+'-') : '') + computeVersion()
+version = (concat_mc_version_to=='version' ? (minecraft_version+'-') : '')
 
 repositories {
 	maven {
@@ -151,19 +151,15 @@ task processClientResources(type: ProcessResources) {
 
 task jar_server(type: Jar) {
 	dependsOn(tasks.sidesplit, tasks.processServerResources)
+	destinationDir file("${buildDir}/distributions")
 	from fileTree(tasks.sidesplit.getServerClasses()), tasks.processServerResources
 	classifier = 'server'
-	manifest {
-		attributes(
-			'Main-Class': 'cpw.mods.fml.relauncher.ServerLaunchWrapper',
-			'TweakClass': 'cpw.mods.fml.common.launcher.FMLTweaker',
-			'Class-Path': configurations.packageServer.collect { 'libraries/' + it.getName() }.join(' ')
-		)
-	}
+	manifest.attributes(generateManifest(true))
 }
 
 task jar_client(type: Jar) {
 	dependsOn(tasks.sidesplit, tasks.processClientResources)
+	destinationDir file("${buildDir}/distributions")
 	from fileTree(tasks.sidesplit.getClientClasses()), tasks.processClientResources
 	classifier = 'client'
 }
@@ -183,152 +179,52 @@ task jar_source(type: Jar) {
 	classifier = 'sources'
 }
 
-task storeLastRevision {
-	inputs.property("version", version)
-	outputs.dir file("$buildDir/versions")
-	doLast {
-		doStoreLastRevision()
+task copyLibraries(type: Copy) {
+	outputs.upToDateWhen { false }
+	into(buildDir)
+	configurations.runtime.resolvedConfiguration.resolvedArtifacts.collect {
+		def moduleVersion = it.moduleVersion
+		from (it.file) {
+			into ("libraries/${moduleVersion.id.group.replace('.', '/')}/${moduleVersion.id.name}/${moduleVersion.id.version}/")
+		}
 	}
 }
-tasks.build.dependsOn tasks.storeLastRevision
 
-task changelog {
-	inputs.property("prev_commit", previousCommit)
-	inputs.property("commit", commit)
-	ext.changelogFile = file("$buildDir/libs/$project.name-$version-changelog.txt")
-	outputs.file changelogFile
-	doLast {
-		doGenerateChangelog(changelogFile);
+task packageLibraries(type: Zip, dependsOn: copyLibraries) {
+	outputs.upToDateWhen { false }
+	setArchiveName("libraries.zip")
+	setDestinationDir(file("$buildDir/distributions"))
+	from("$buildDir/libraries")
+}
+
+tasks.build.dependsOn tasks.packageLibraries
+
+def generateManifest(boolean legacy = false) {
+	[
+			'Forge-Version'         : '10.13.4.1614',
+			'TweakClass'            : 'cpw.mods.fml.common.launcher.FMLTweaker',
+			'Main-Class'            : 'net.minecraft.launchwrapper.Launch',
+			'Class-Path'            : generateClasspath(legacy)
+	]
+}
+
+def generateClasspath(boolean legacy = false) {
+	def classpath = ''
+	configurations.runtime.resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion.id }.each {
+		def jar = "${it.group.replace('.', '/')}/${it.name}/${it.version}/${it.name}-${it.version}.jar"
+		classpath += " ${legacy ? 'libraries/' : repeat('../', (group as String).split('\\.').length + 2)}${jar}"
 	}
+	return classpath.trim()
+}
+
+static String repeat(String string, int times) {
+	StringBuilder builder = new StringBuilder(string.length() * times)
+	times.times { builder.append(string) }
+	builder as String
 }
 
 artifacts {
 	if(produce_universal_jar == 'true')	archives jar_universal
 	if(produce_server_jar == 'true')	archives jar_server
 	if(produce_client_jar == 'true')	archives jar_client
-}
-
-tasks.publish.dependsOn changelog
-//publishing {
-//	publications {
-//		if(publish_jars.contains('dev'))
-//			mavenDevJar(MavenPublication) {
-//				from new JavaLibrary(new ArchivePublishArtifact(tasks.jar), configurations.packageAll.getAllDependencies())
-//				artifacts.matching({it.classifier == "dev"}).all({it.classifier = null})
-//				artifact tasks.jar_source
-//				artifact tasks.changelog.getProperty('changelogFile'), {classifier = 'changelog'}
-//			}
-//		if(publish_jars.contains('universal'))
-//			mavenUnivarsalJar(MavenPublication) {
-//				from new JavaLibrary(new ArchivePublishArtifact(tasks.jar_universal), configurations.packageAll.getAllDependencies())
-//				artifacts.matching({it.classifier == "universal"}).all({it.classifier = null})
-//				artifactId = project.name + '-universal'
-//			}
-//		if(publish_jars.contains('server'))
-//			mavenServerJar(MavenPublication) {
-//				from new JavaLibrary(new ArchivePublishArtifact(tasks.jar_server), configurations.packageServer.getAllDependencies())
-//				artifacts.matching({it.classifier == "server"}).all({it.classifier = null})
-//				artifactId = project.name + '-server'
-//			}
-//		if(publish_jars.contains('client'))
-//			mavenClientJar(MavenPublication) {
-//				from new JavaLibrary(new ArchivePublishArtifact(tasks.jar_client), configurations.packageClient.getAllDependencies())
-//				artifacts.matching({it.classifier == "client"}).all({it.classifier = null})
-//				artifactId = project.name + '-client'
-//			}
-//	}
-//	repositories {
-//		if(project.hasProperty('publish_url') && !publish_url.isEmpty())
-//			maven {
-//				url publish_url
-//			}
-//	}
-//}
-
-task dumpLibs(type: Copy) {
-	into "$buildDir/libs/libraries"
-	from configurations.runtime
-}
-
-String getGitDesc() {
-	def stdout = new ByteArrayOutputStream()
-	exec {
-		commandLine 'git', 'describe', '--tags', '--long'
-		standardOutput = stdout
-		errorOutput = stdout
-	}.rethrowFailure().assertNormalExitValue()
-	return stdout.toString().trim()
-}
-
-String computeVersion() {
-	if(project.hasProperty('override_version'))
-		return override_version
-
-	String mmversion; // major.minor
-	try {
-		String[] parts = getGitDesc().split('-')
-		if(parts.length != 3) throw new GradleException('no git tags found')
-		if(!parts[0].startsWith('v')) throw new GradleException('last git tag is not a version')
-		mmversion = parts[0].substring(1) //removing 'v'
-		commit = parts[2].substring(1) //removing 'g'
-	} catch (Exception e) {
-		if(release_type != 'indev') throw e
-		return 'indev'
-	}
-
-	if(release_type != 'stable') {
-		int ind = mmversion.lastIndexOf('.')
-		mmversion = mmversion.substring(0, ind+1) + ((mmversion.substring(ind+1) as int) + 1) + '.0-' + release_type
-	}
-
-	if(project.hasProperty('override_revision')) {
-		revision = override_revision as int
-	} else if(release_type != 'indev' || project.hasProperty('increment_revision')) {
-		File verfile = versionFile = file("$buildDir/versions/$mmversion")
-		String filetext;
-		if(verfile.exists() && !(filetext = verfile.getText().trim()).isEmpty()) {
-			String[] fileparts = filetext.split(':')
-			if(fileparts.length != 2) throw new GradleException('Version file is corrupted: ' + verfile.getAbsolutePath())
-			revision = fileparts[1] as int;
-			previousCommit = fileparts[0];
-			if(!commit.equals(fileparts[0]) || project.hasProperty('increment_revision')) {
-				revision++;
-			}
-		}
-	}
-
-	return (revision > 0 || release_type == 'stable') ? (mmversion+'.'+revision) : mmversion;
-}
-
-void doStoreLastRevision() {
-	if(versionFile != null) {
-		versionFile.getParentFile().mkdirs()
-		versionFile.write(commit+':'+revision)
-		file("$buildDir/versions/versions").append(commit+':'+version+'\n');
-	}
-}
-
-void doGenerateChangelog(File file) {
-	BufferedWriter writer = file.newWriter();
-	writer.writeLine("Changelog for $name-$version");
-	if(previousCommit == null) {
-		writer.writeLine('\tempty');
-	} else {
-		def stdout = new ByteArrayOutputStream()
-		exec {
-			commandLine 'git', 'log', '--abbrev-commit', '--pretty=short', previousCommit + '..HEAD'
-			standardOutput = stdout
-			errorOutput = stdout
-		}.rethrowFailure().assertNormalExitValue()
-		for(String s : stdout.toString().trim().split('\n')) {
-			s = s.trim();
-			if(s.isEmpty() || s.startsWith('Author'))
-				continue;
-			if(s.startsWith('commit'))
-				writer.writeLine('\t' + s.substring(7) + ':');
-			else
-				writer.writeLine('\t\t' + s);
-		}
-	}
-	writer.close();
 }
