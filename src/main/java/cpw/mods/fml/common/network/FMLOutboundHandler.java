@@ -1,12 +1,17 @@
 package cpw.mods.fml.common.network;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import java.util.List;
+
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.NetworkManager;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
