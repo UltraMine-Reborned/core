@@ -433,7 +433,7 @@ public class GameData {
 
 	public static List<String> injectWorldIDMap(Map<String, Integer> dataList, Set<Integer> blockedIds, Map<String, String> blockAliases, Map<String, String> itemAliases, Set<String> blockSubstitutions, Set<String> itemSubstitutions, boolean injectFrozenData, boolean isLocalWorld)
 	{
-		FMLLog.info("Injecting existing block and item data into this %s instance", FMLCommonHandler.instance().getEffectiveSide().isServer() ? "server" : "client");
+		FMLLog.fine("Injecting existing block and item data into this %s instance", FMLCommonHandler.instance().getEffectiveSide().isServer() ? "server" : "client");
 		Map<String, Integer[]> remaps = Maps.newHashMap();
 		LinkedHashMap<String, Integer> missingMappings = new LinkedHashMap<String, Integer>();
 		getMain().testConsistency();
@@ -502,7 +502,7 @@ public class GameData {
 
 				if (currId == -1)
 				{
-					FMLLog.info("Found a missing id from the world %s", itemName);
+					FMLLog.fine("Found a missing id from the world %s", itemName);
 					missingMappings.put(entry.getKey(), newId);
 					continue; // no block/item -> nothing to add
 				}
@@ -546,7 +546,7 @@ public class GameData {
 
 			if (!missingBlocks.isEmpty() || !missingItems.isEmpty())
 			{
-				FMLLog.info("Injecting new block and item data into this server instance.");
+				FMLLog.fine("Injecting new block and item data into this server instance.");
 
 				for (int pass = 0; pass < 2; pass++)
 				{
@@ -568,7 +568,7 @@ public class GameData {
 							newId = newData.registerItem(frozen.iItemRegistry.getRaw(itemName), itemName, currId);
 						}
 
-						FMLLog.info("Injected new block/item %s: %d (init) -> %d (map).", itemName, currId, newId);
+						FMLLog.fine("Injected new block/item %s: %d (init) -> %d (map).", itemName, currId, newId);
 
 						if (newId != currId) // a new id was assigned
 						{

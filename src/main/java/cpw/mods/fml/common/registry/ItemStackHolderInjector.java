@@ -22,15 +22,15 @@ public enum ItemStackHolderInjector
 	private List<ItemStackHolderRef> itemStackHolders = Lists.newArrayList();
 
 	public void inject() {
-		FMLLog.getLogger().log(Level.INFO, "Injecting itemstacks");
+		FMLLog.getLogger().log(Level.DEBUG, "Injecting itemstacks");
 		for (ItemStackHolderRef ishr: itemStackHolders) {
 			ishr.apply();
 		}
-		FMLLog.getLogger().log(Level.INFO, "Itemstack injection complete");
+		FMLLog.getLogger().log(Level.DEBUG, "Itemstack injection complete");
 	}
 
 	public void findHolders(ASMDataTable table) {
-		FMLLog.info("Identifying ItemStackHolder annotations");
+		FMLLog.fine("Identifying ItemStackHolder annotations");
 		Set<ASMData> allItemStackHolders = table.getAll(GameRegistry.ItemStackHolder.class.getName());
 		Map<String, Class<?>> classCache = Maps.newHashMap();
 		for (ASMData data : allItemStackHolders)
@@ -42,7 +42,7 @@ public enum ItemStackHolderInjector
 			String nbt = data.getAnnotationInfo().containsKey("nbt") ? (String) data.getAnnotationInfo().get("nbt") : "";
 			addHolder(classCache, className, annotationTarget, value, meta, nbt);
 		}
-		FMLLog.info("Found %d ItemStackHolder annotations", allItemStackHolders.size());
+		FMLLog.fine("Found %d ItemStackHolder annotations", allItemStackHolders.size());
 
 	}
 

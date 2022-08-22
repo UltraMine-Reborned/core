@@ -24,7 +24,7 @@ public enum ObjectHolderRegistry {
 
 	public void findObjectHolders(ASMDataTable table)
 	{
-		FMLLog.info("Processing ObjectHolder annotations");
+		FMLLog.fine("Processing ObjectHolder annotations");
 		Set<ASMData> allObjectHolders = table.getAll(GameRegistry.ObjectHolder.class.getName());
 		Map<String, String> classModIds = Maps.newHashMap();
 		Map<String, Class<?>> classCache = Maps.newHashMap();
@@ -53,7 +53,7 @@ public enum ObjectHolderRegistry {
 		}
 		scanTarget(classModIds, classCache, "net.minecraft.init.Blocks", null, "minecraft", true, true);
 		scanTarget(classModIds, classCache, "net.minecraft.init.Items", null, "minecraft", true, true);
-		FMLLog.info("Found %d ObjectHolder annotations", objectHolders.size());
+		FMLLog.fine("Found %d ObjectHolder annotations", objectHolders.size());
 	}
 
 	private void scanTarget(Map<String, String> classModIds, Map<String, Class<?>> classCache, String className, String annotationTarget, String value, boolean isClass, boolean extractFromValue)
@@ -130,12 +130,12 @@ public enum ObjectHolderRegistry {
 
 	public void applyObjectHolders()
 	{
-		FMLLog.info("Applying holder lookups");
+		FMLLog.fine("Applying holder lookups");
 		for (ObjectHolderRef ohr : objectHolders)
 		{
 			ohr.apply();
 		}
-		FMLLog.info("Holder lookups applied");
+		FMLLog.fine("Holder lookups applied");
 	}
 
 }
