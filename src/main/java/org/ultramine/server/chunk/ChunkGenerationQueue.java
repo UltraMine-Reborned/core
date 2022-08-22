@@ -45,6 +45,9 @@ public class ChunkGenerationQueue
 		for(QueuedChunk chunk; (chunk = queue.poll()) != null;)
 		{
 			map.remove(ChunkHash.chunkToKey(chunk.cx, chunk.cz));
+			if(!chunk.provider.worldObj.getBorder().isChunkInsideBorder(chunk.cx, chunk.cz)) {
+				continue;
+			}
 			if(chunk.provider.isWorldUnloaded())
 				continue;
 			if(chunk.provider.loadAsync(chunk.cx, chunk.cz, false, chunk))
