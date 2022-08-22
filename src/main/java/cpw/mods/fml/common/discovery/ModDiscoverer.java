@@ -13,7 +13,14 @@
 package cpw.mods.fml.common.discovery;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.Level;
@@ -89,65 +96,59 @@ public class ModDiscoverer
 
 	public void findModDirMods(File modsDir, File[] supplementalModFileCandidates)
 	{
-		File[] modList = FileListHelper.sortFileList(modsDir, null);
-		modList = FileListHelper.sortFileList(ObjectArrays.concat(modList, supplementalModFileCandidates, File.class));
-		for (File modFile : modList)
-		{
+		File[] modList = modsDir.listFiles();
+		modList = ObjectArrays.concat(Objects.requireNonNull(modList), supplementalModFileCandidates, File.class);
+		for (File modFile : modList) {
 			// skip loaded coremods
-			if (CoreModManager.getLoadedCoremods().contains(modFile.getName()))
-			{
+			if (CoreModManager.getLoadedCoremods().contains(modFile.getName())) {
 				FMLLog.finer("Skipping already parsed coremod or tweaker %s", modFile.getName());
 			}
-			else if (modFile.isDirectory())
-			{
+			else if (modFile.isDirectory()) {
 				FMLLog.fine("Found a candidate mod directory %s", modFile.getName());
 				candidates.add(new ModCandidate(modFile, modFile, ContainerType.DIR));
 			}
-			else
-			{
+			else {
 				Matcher matcher = zipJar.matcher(modFile.getName());
-
-				if (matcher.matches())
-				{
+				if (matcher.matches()) {
 					FMLLog.fine("Found a candidate zip or jar file %s", matcher.group(0));
 					candidates.add(new ModCandidate(modFile, modFile, ContainerType.JAR));
-				}
-				else
-				{
+				} else {
 					FMLLog.fine("Ignoring unknown file %s in mods directory", modFile.getName());
 				}
 			}
 		}
 	}
 
-	public List<ModContainer> identifyMods()
-	{
-		List<ModContainer> modList = Lists.newArrayList();
 
-		for (ModCandidate candidate : candidates)
-		{
-			try
-			{
-				List<ModContainer> mods = candidate.explore(dataTable);
-				if (mods.isEmpty() && !candidate.isClasspath())
-				{
-					nonModLibs.add(candidate.getModContainer());
+	public List<ModContainer> identifyMods() {
+		ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		Collection<Future<?>> futures = new LinkedList<>();
+		List<ModContainer> modList = Lists.newArrayList();
+		for (ModCandidate candidate : candidates) {
+			futures.add(threadPool.submit(() -> {
+				try {
+					List<ModContainer> mods = candidate.explore(dataTable);
+					if (mods.isEmpty() && !candidate.isClasspath()) {
+						nonModLibs.add(candidate.getModContainer());
+					} else {
+						modList.addAll(mods);
+					}
 				}
-				else
-				{
-					modList.addAll(mods);
+				catch (LoaderException le) {
+					FMLLog.log(Level.WARN, le, "Выявлена проблема с кандидатом в мод %s, игнорирую его...", candidate.getModContainer());
 				}
-			}
-			catch (LoaderException le)
-			{
-				FMLLog.log(Level.WARN, le, "Identified a problem with the mod candidate %s, ignoring this source", candidate.getModContainer());
-			}
-			catch (Throwable t)
-			{
-				Throwables.propagate(t);
+				catch (Throwable t) {
+					Throwables.propagate(t);
+				}
+			}));
+		}
+		for (Future<?> future : futures) {
+			try {
+				future.get();
+			} catch (ExecutionException | InterruptedException e) {
+				Throwables.propagate(e);
 			}
 		}
-
 		return modList;
 	}
 
