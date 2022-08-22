@@ -2,10 +2,8 @@ package cpw.mods.fml.common.eventhandler;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.*;
 
 import javax.annotation.Nonnull;
 
@@ -162,31 +160,29 @@ public class EventBus implements IEventExceptionHandler
 	}
 	
 	/* ======================================== ULTRAMINE START ===================================== */
-	
-	public boolean postWithProfile(Profiler profiler, Event event)
-	{
+	ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	Collection<Future<?>> futures;
+
+	public boolean postEvent(Event event) {
 		IEventListener[] listeners = event.getListenerList().getListeners(busID);
 		int index = 0;
-		try
-		{
-			for (; index < listeners.length; index++)
-			{
+		try {
+			futures = new LinkedList<>();
+			for (; index < listeners.length; index++) {
 				IEventListener listener = listeners[index];
-				String owner = listener instanceof ASMEventHandler ? ((ASMEventHandler)listener).getOwner() : null;
-				if(owner != null)
-					profiler.startSection(owner);
-
-				listener.invoke(event);
-
-				if(owner != null)
-					profiler.endSection();
+				futures.add(threadPool.submit(() -> listener.invoke(event)));
 			}
-		}
-		catch (Throwable throwable)
-		{
+			for (Future<?> future : futures) {
+				try {
+					future.get();
+				} catch (ExecutionException | InterruptedException e) {
+					Throwables.propagate(e);
+				}
+			}
+		} catch (Throwable throwable) {
 			exceptionHandler.handleException(this, event, listeners, index, throwable);
 			Throwables.propagate(throwable);
 		}
-		return (event.isCancelable() ? event.isCanceled() : false);
+		return event.isCancelable() && event.isCanceled();
 	}
 }

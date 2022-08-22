@@ -247,7 +247,7 @@ public class FMLCommonHandler
 	public void onPostServerTick()
 	{
 		profiler.startSection("forge_onPostServerTick");
-		bus().postWithProfile(profiler, new TickEvent.ServerTickEvent(Phase.END));
+		bus().postEvent(new TickEvent.ServerTickEvent(Phase.END));
 		profiler.endSection();
 	}
 
@@ -264,7 +264,7 @@ public class FMLCommonHandler
 	public void onPreServerTick()
 	{
 		profiler.startSection("forge_onPreServerTick");
-		bus().postWithProfile(profiler, new TickEvent.ServerTickEvent(Phase.START));
+		bus().postEvent(new TickEvent.ServerTickEvent(Phase.START));
 		profiler.endSection();
 	}
 

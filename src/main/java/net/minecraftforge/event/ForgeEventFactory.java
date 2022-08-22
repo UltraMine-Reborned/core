@@ -223,7 +223,7 @@ public class ForgeEventFactory
 
 	public static void firePlayerSavingEvent(EntityPlayer player, File playerDirectory, String uuidString)
 	{
-		MinecraftForge.EVENT_BUS.postWithProfile(player.worldObj.theProfiler, new PlayerEvent.SaveToFile(player, playerDirectory, uuidString));
+		MinecraftForge.EVENT_BUS.postEvent(new PlayerEvent.SaveToFile(player, playerDirectory, uuidString));
 	}
 
 	public static void firePlayerLoadingEvent(EntityPlayer player, IPlayerFileData playerFileData, String uuidString)

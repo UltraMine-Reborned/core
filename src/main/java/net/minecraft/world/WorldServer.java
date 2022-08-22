@@ -721,7 +721,7 @@ public class WorldServer extends World
 			}
 
 			this.chunkProvider.saveChunks(p_73044_1_, p_73044_2_);
-			MinecraftForge.EVENT_BUS.postWithProfile(this.theProfiler, new WorldEvent.Save(this));
+			MinecraftForge.EVENT_BUS.postEvent(new WorldEvent.Save(this));
 		}
 	}
 
@@ -1124,6 +1124,6 @@ public class WorldServer extends World
 		{
 			saveLevel();
 		} catch (MinecraftException ignored) {}
-		MinecraftForge.EVENT_BUS.postWithProfile(this.theProfiler, new WorldEvent.Save(this));
+		MinecraftForge.EVENT_BUS.postEvent(new WorldEvent.Save(this));
 	}
 }

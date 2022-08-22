@@ -152,7 +152,7 @@ public class BackupManager
 			if(dirs.contains(server.getMultiWorld().getSaveDirName(world)))
 			{
 				world.theChunkProviderServer.saveChunks(true, null);
-				MinecraftForge.EVENT_BUS.postWithProfile(world.theProfiler, new WorldEvent.Save(world));
+				MinecraftForge.EVENT_BUS.postEvent(new WorldEvent.Save(world));
 			}
 			world.theChunkProviderServer.preventSaving();
 		}
