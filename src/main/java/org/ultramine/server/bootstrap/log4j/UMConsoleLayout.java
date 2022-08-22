@@ -12,12 +12,9 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
-import org.apache.logging.log4j.core.helpers.Charsets;
-import org.apache.logging.log4j.core.helpers.Constants;
 import org.apache.logging.log4j.core.layout.AbstractStringLayout;
 import org.fusesource.jansi.Ansi;
 import org.ultramine.server.bootstrap.UMBootstrap;
-import org.ultramine.server.internal.JLineSupport;
 
 @Plugin(name = "UMConsoleLayout", category = "Core", elementType = "layout", printObject = false)
 public class UMConsoleLayout extends AbstractStringLayout
@@ -41,7 +38,7 @@ public class UMConsoleLayout extends AbstractStringLayout
 		StringBuilder sb = new StringBuilder(10+1+6+4+1+2 + msg.length() + (trwn == null ? 0 : trwn.length() + 2) + (ANSI ? 100 : 0));
 		
 		sb.append('[');
-		sb.append(dateFormat.format(event.getMillis()));
+		sb.append(dateFormat.format(event.getTimeMillis()));
 		sb.append("] ");
 		
 		sb.append('[');
@@ -73,11 +70,11 @@ public class UMConsoleLayout extends AbstractStringLayout
 
 		if(trwn != null)
 		{
-			sb.append(Constants.LINE_SEP);
+			sb.append("\n");
 			sb.append(trwn);
 		}
 		
-		sb.append(Constants.LINE_SEP);
+		sb.append("\n");
 		
 		return sb.toString();
 	}
@@ -160,8 +157,7 @@ public class UMConsoleLayout extends AbstractStringLayout
 	@PluginFactory
 	public static UMConsoleLayout createLayout(@PluginAttribute("charset") final String charsetName)
 	{
-		String overrideCharset = UMBootstrap.getTerminalCharset();
-		return new UMConsoleLayout(Charsets.getSupportedCharset(overrideCharset != null && !overrideCharset.isEmpty() ? overrideCharset : charsetName));
+		return new UMConsoleLayout(Charset.defaultCharset());
 	}
 
 	static

@@ -10,3 +10,4 @@
 #Gradle
 build/
 .gradle
+/server_dir/

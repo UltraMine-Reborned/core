@@ -36,9 +36,9 @@ public class UMStripColorsRewritePolicy implements RewritePolicy
 			return source;
 		}
 
-		return new Log4jLogEvent(source.getLoggerName(), source.getMarker(), source.getFQCN(), source.getLevel(),
+		return new Log4jLogEvent(source.getLoggerName(), source.getMarker(), source.getLoggerFqcn(), source.getLevel(),
 				message, source.getThrown(), source.getContextMap(), source.getContextStack(), source.getThreadName(),
-				source.getSource(), source.getMillis());
+				source.getSource(), source.getTimeMillis());
 	}
 
 	@PluginFactory
