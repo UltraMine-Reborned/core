@@ -42,6 +42,7 @@ public class ConfigurationHandler
 			FileUtils.forceMkdir(storageDir);
 			FileUtils.forceMkdir(worldsDir);
 			FileUtils.forceMkdir(vanillaConfigsDir);
+			load();
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to create necessary server directories", e);
 		}

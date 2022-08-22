@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 
 import cpw.mods.fml.common.versioning.ArtifactVersion;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
+import org.ultramine.server.ConfigurationHandler;
 
 public class ForgeVersion
 {
@@ -78,72 +79,58 @@ public class ForgeVersion
 
 	public static void startVersionCheck()
 	{
-		new Thread("Forge Version Check")
-		{
-			@SuppressWarnings("unchecked")
-			@Override
-			public void run()
-			{
-				try
-				{
-					URL url = new URL("http://files.minecraftforge.net/maven/net/minecraftforge/forge/promotions_slim.json");
-					InputStream con = url.openStream();
-					String data = new String(ByteStreams.toByteArray(con));
-					con.close();
+		if(ConfigurationHandler.getServerConfig().ultraMineReborneded.forgeVersionChecking) {
+			new Thread("Forge Version Check") {
+				@SuppressWarnings("unchecked")
+				@Override
+				public void run() {
+					try {
+						URL url = new URL("http://files.minecraftforge.net/maven/net/minecraftforge/forge/promotions_slim.json");
+						InputStream con = url.openStream();
+						String data = new String(ByteStreams.toByteArray(con));
+						con.close();
 
-					Map<String, Object> json = new Gson().fromJson(data, Map.class);
-					//String homepage = (String)json.get("homepage");
-					Map<String, String> promos = (Map<String, String>)json.get("promos");
+						Map<String, Object> json = new Gson().fromJson(data, Map.class);
+						//String homepage = (String)json.get("homepage");
+						Map<String, String> promos = (Map<String, String>) json.get("promos");
 
-					String rec = promos.get(MinecraftForge.MC_VERSION + "-recommended");
-					String lat = promos.get(MinecraftForge.MC_VERSION + "-latest");
-					ArtifactVersion current = new DefaultArtifactVersion(getVersion());
+						String rec = promos.get(MinecraftForge.MC_VERSION + "-recommended");
+						String lat = promos.get(MinecraftForge.MC_VERSION + "-latest");
+						ArtifactVersion current = new DefaultArtifactVersion(getVersion());
 
-					if (rec != null)
-					{
-						ArtifactVersion recommended = new DefaultArtifactVersion(rec);
-						int diff = recommended.compareTo(current);
+						if (rec != null) {
+							ArtifactVersion recommended = new DefaultArtifactVersion(rec);
+							int diff = recommended.compareTo(current);
 
-						if (diff == 0)
-							status = UP_TO_DATE;
-						else if (diff < 0)
-						{
-							status = AHEAD;
-							if (lat != null)
-							{
-								if (current.compareTo(new DefaultArtifactVersion(lat)) < 0)
-								{
-									status = OUTDATED;
-									target = lat;
+							if (diff == 0)
+								status = UP_TO_DATE;
+							else if (diff < 0) {
+								status = AHEAD;
+								if (lat != null) {
+									if (current.compareTo(new DefaultArtifactVersion(lat)) < 0) {
+										status = OUTDATED;
+										target = lat;
+									}
 								}
+							} else {
+								status = OUTDATED;
+								target = rec;
 							}
-						}
-						else
-						{
-							status = OUTDATED;
-							target = rec;
-						}
-					}
-					else if (lat != null)
-					{
-						if (current.compareTo(new DefaultArtifactVersion(lat)) < 0)
-						{
-							status = BETA_OUTDATED;
-							target = lat;
-						}
-						else
+						} else if (lat != null) {
+							if (current.compareTo(new DefaultArtifactVersion(lat)) < 0) {
+								status = BETA_OUTDATED;
+								target = lat;
+							} else
+								status = BETA;
+						} else
 							status = BETA;
+					} catch (Exception e) {
+						e.printStackTrace();
+						status = FAILED;
 					}
-					else
-						status = BETA;
 				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-					status = FAILED;
-				}
-			}
-		}.start();
+			}.start();
+		}
 	}
 }
 

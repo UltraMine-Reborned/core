@@ -7,11 +7,17 @@ import java.util.Map;
 
 public class UltramineServerConfig
 {
+	public UltraMineRebornededConf ultraMineReborneded = new UltraMineRebornededConf();
 	public ListenConf listen = new ListenConf();
 	public SettingsConf settings = new SettingsConf();
 	public ToolsConf tools = new ToolsConf();
 	public Map<String, DatabaseConf> databases = new HashMap<String, DatabaseConf>();
 	public VanillaConf vanilla = new VanillaConf();
+
+	public static class UltraMineRebornededConf
+	{
+		public boolean forgeVersionChecking = false;
+	}
 
 	public static class ListenConf
 	{

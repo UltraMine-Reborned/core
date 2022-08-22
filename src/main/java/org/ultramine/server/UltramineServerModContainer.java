@@ -114,7 +114,6 @@ public class UltramineServerModContainer extends DummyModContainer
 				InputStream langFile = getClass().getResourceAsStream("/assets/ultramine/lang/en_US.lang");
 				if (langFile != null) StringTranslate.inject(langFile);
 
-				ConfigurationHandler.load();
 				Databases.init();
 				MinecraftServer.getServer().getMultiWorld().preloadConfigs();
 				ConfigurationHandler.postWorldDescsLoad();
