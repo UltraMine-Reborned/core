@@ -172,7 +172,7 @@ public class ButtonCommand
             if(bt.permission == null || ((EntityPlayerMP) e.entityPlayer).hasPermission(bt.permission))
             {
                 for(String cmd : bt.commands)
-                    server.getCommandManager().executeCommand(server, cmd.replace("@p", e.entityPlayer.getGameProfile().getName()));
+                    server.getCommandManager().executeCommand(e.entityPlayer, cmd.replace("@p", e.entityPlayer.getGameProfile().getName()));
             }
             else
             {
