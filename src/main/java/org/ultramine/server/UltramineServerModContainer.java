@@ -18,6 +18,7 @@ import org.ultramine.commands.basic.GenWorldCommand;
 import org.ultramine.commands.basic.TechCommands;
 import org.ultramine.commands.basic.VanillaCommands;
 import org.ultramine.commands.syntax.DefaultCompleters;
+import org.ultramine.core.economy.Currency;
 import org.ultramine.core.economy.service.DefaultHoldingsProvider;
 import org.ultramine.core.economy.service.Economy;
 import org.ultramine.core.economy.service.EconomyRegistry;
@@ -124,6 +125,8 @@ public class UltramineServerModContainer extends DummyModContainer
 				services.register(EconomyRegistry.class, new UMEconomyRegistry(), 0);
 				services.register(Economy.class, new UMEconomy(), 0);
 				services.register(DefaultHoldingsProvider.class, new UMIntegratedHoldingsProvider(), 0);
+				Currency currency = economyRegistry.registerCurrency("GSC", "dollar", "dollars", "$", 2, 0).getValue();
+				economyRegistry.registerStartPlayerBalance(currency, ConfigurationHandler.getServerConfig().tools.economy.startBalance);
 			}
 
 			OpBasedPermissions vanPerms = new OpBasedPermissions();
