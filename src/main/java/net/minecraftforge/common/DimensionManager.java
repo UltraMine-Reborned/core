@@ -226,7 +226,7 @@ public class DimensionManager
 		WorldServer overworld = getWorld(0);
 		if (overworld == null)
 		{
-			throw new RuntimeException("Cannot Hotload Dim: Overworld is not Loaded!");
+			return;
 		}
 		try
 		{
@@ -237,7 +237,7 @@ public class DimensionManager
 			System.err.println("Cannot Hotload Dim: " + e.getMessage());
 			return; // If a provider hasn't been registered then we can't hotload the dim
 		}
-		MinecraftServer mcServer = overworld.func_73046_m();
+		MinecraftServer mcServer = FMLCommonHandler.instance().getMinecraftServerInstance();
 		if(!mcServer.isSinglePlayer())
 		{
 			mcServer.getMultiWorld().initDimension(dim);
@@ -261,6 +261,10 @@ public class DimensionManager
 
 	public static WorldServer getWorld(int id)
 	{
+		MinecraftServer mcServer = FMLCommonHandler.instance().getMinecraftServerInstance();
+		if(mcServer.getMultiWorld().getWorldByID(id) != null) {
+			return mcServer.getMultiWorld().getWorldByID(id);
+		}
 		return worlds.get(id);
 	}
 
