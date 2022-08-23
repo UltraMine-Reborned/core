@@ -197,6 +197,7 @@ public class UltramineServerModContainer extends DummyModContainer
 			e.registerCommands(TechCommands.class);
 			e.registerCommands(GenWorldCommand.class);
 			e.registerCommands(EconomyHoldingsCommands.class);
+			e.registerCommands(OpenInvCommands.class);
 
 			if(e.getSide().isServer())
 			{
