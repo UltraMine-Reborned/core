@@ -202,6 +202,7 @@ public class UltramineServerModContainer extends DummyModContainer
 
 			if(e.getSide().isServer())
 			{
+				new ButtonCommand(e.getServer()).load(e);
 				itemBlocker.load();
 				e.getServer().getScheduler().start();
 			}
